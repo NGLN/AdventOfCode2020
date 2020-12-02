@@ -34,8 +34,6 @@ begin
       Answer1 := StrToInt(List[I]);
       for J := 0 to List.Count - 1 do
       begin
-//        if J = I then       { afgekeken van Paul Jan; dus het is beter om }
-//          Continue;         { alle 3 indexen te vergelijken }
         Answer2 := StrToInt(List[J]);
         if List.IndexOf(IntToStr(2020 - Answer2 - Answer1)) > 0 then
         begin
