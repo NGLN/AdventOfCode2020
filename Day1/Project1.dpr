@@ -1,4 +1,4 @@
-program Day1;
+program Project1;
 
 {$APPTYPE CONSOLE}
 
