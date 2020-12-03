@@ -7,9 +7,8 @@ program Project1;
 uses
   System.SysUtils, System.Classes;
 
-const
-  X = 0;
-  Y = 1;
+type
+  TDirection = (X, Y);
 
 var
   List: TStringList;
@@ -19,7 +18,7 @@ var
   RowCount: Integer;
   Answer1: Integer;
   Answer2: Int64;
-  Slopes: array[0..4] of array[X..Y] of Integer =
+  Slopes: array[0..4] of array[TDirection] of Integer =
     ((1, 1), (3, 1), (5, 1), (7, 1), (1, 2));
   I: Integer;
   J: Integer;
