@@ -26,7 +26,6 @@ begin
 end;
 
 begin
-  WriteLn(Ord(High(AnsiChar)));
   Input := TStringList.Create;
   try
     Input.LoadFromFile('input.txt');
