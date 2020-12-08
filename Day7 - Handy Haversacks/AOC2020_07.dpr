@@ -16,14 +16,14 @@ type
   TBag = class(TObject)
     Color: String;
     Items: array of TBagItem;
-    Rule: String;
-    constructor Create(ARule: String);
-    function Contains(AColor: String): Integer;
+    ContentRule: String;
+    constructor Create(const ABagRule: String);
+    function Contains(const AColor: String): Integer;
     function Content: Integer;
   end;
 
   TBags = class(TObjectList<TBag>)
-    function GetBagWithColor(AColor: String): TBag;
+    function GetBagWithColor(const AColor: String): TBag;
     procedure ResolveAllRules;
   end;
 
@@ -33,7 +33,7 @@ type
 dull blue bags contain 2 dotted green bags, 1 dull brown bag, 3 striped tomato bags, 5 muted blue bags.
 posh green bags contain no other bags. }
 
-function TBag.Contains(AColor: String): Integer;
+function TBag.Contains(const AColor: String): Integer;
 var
   I: Integer;
 begin
@@ -47,10 +47,12 @@ begin
   end;
 end;
 
-constructor TBag.Create(ARule: String);
+constructor TBag.Create(const ABagRule: String);
+const
+  S: String = ' bags contain ';
 begin
-  Rule := ARule;
-  Color := Copy(ARule, 1, Pos(' bags', ARule) - 1);
+  Color := Copy(ABagRule, 1, Pos(S, ABagRule) - 1);
+  ContentRule := Copy(ABagRule, Length(Color + S) + 1, Length(ABagRule));
 end;
 
 function TBag.Content: Integer;
@@ -64,7 +66,7 @@ end;
 
 { TBags }
 
-function TBags.GetBagWithColor(AColor: String): TBag;
+function TBags.GetBagWithColor(const AColor: String): TBag;
 begin
   Result := nil;
   for Result in Self do
@@ -75,29 +77,24 @@ end;
 procedure TBags.ResolveAllRules;
 var
   Bag: TBag;
-  S: String;
+  Rules: TArray<String>;
   I: Integer;
-  A: TArray<String>;
   J: Integer;
   K: Integer;
 begin
   for Bag in Self do
-  begin
-    S := Bag.Rule;
-    System.Delete(S, 1, Pos('contain', S) + 7);
-    if S <> 'no other bags.' then
+    if Bag.ContentRule <> 'no other bags.' then
     begin
-      A := S.Split([', ']);
-      SetLength(Bag.Items, Length(A));
-      for I := 0 to Length(A) - 1 do
+      Rules := Bag.ContentRule.Split([', ']);
+      SetLength(Bag.Items, Length(Rules));
+      for I := 0 to Length(Rules) - 1 do
       begin
-        J := Pos(' ', A[I]);
-        Bag.Items[I].Count := StrToInt(Copy(A[I], 1, J - 1));
-        K := Pos(' bag', A[I]);
-        Bag.Items[I].Bag := GetBagWithColor(Copy(A[I], J + 1, K - J - 1));
+        J := Pos(' ', Rules[I]);
+        Bag.Items[I].Count := StrToInt(Copy(Rules[I], 1, J - 1));
+        K := Pos(' bag', Rules[I]);
+        Bag.Items[I].Bag := GetBagWithColor(Copy(Rules[I], J + 1, K - J - 1));
       end;
     end;
-  end;
 end;
 
 var
