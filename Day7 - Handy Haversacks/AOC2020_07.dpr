@@ -3,9 +3,7 @@ program AOC2020_07;
 {$APPTYPE CONSOLE}
 
 uses
-  System.SysUtils,
-  System.Classes,
-  System.Generics.Collections;
+  System.SysUtils, System.Classes, System.Generics.Collections;
 
 type
   TBag = class;
@@ -33,8 +31,7 @@ type
 
 { Rules:
 dull blue bags contain 2 dotted green bags, 1 dull brown bag, 3 striped tomato bags, 5 muted blue bags.
-posh green bags contain no other bags.
-}
+posh green bags contain no other bags. }
 
 function TBag.Contains(AColor: String): Integer;
 var
@@ -62,10 +59,7 @@ var
 begin
   Result := 0;
   for I := 0 to Length(Items) - 1 do
-  begin
-    Inc(Result, Items[I].Count);
-    Inc(Result, Items[I].Count * Items[I].Bag.Content);
-  end;
+    Inc(Result, Items[I].Count * (1 + Items[I].Bag.Content));
 end;
 
 { TBags }
@@ -91,7 +85,7 @@ begin
   begin
     S := Bag.Rule;
     System.Delete(S, 1, Pos('contain', S) + 7);
-    if S[1] <> 'n' then { S <> 'no other bags.' }
+    if S <> 'no other bags.' then
     begin
       A := S.Split([', ']);
       SetLength(Bag.Items, Length(A));
