@@ -15,11 +15,11 @@ type
 
   TBag = class(TObject)
     Color: String;
-    Items: array of TBagItem;
     ContentRule: String;
-    constructor Create(const ABagRule: String);
+    Items: array of TBagItem;
     function Contains(const AColor: String): Integer;
     function Content: Integer;
+    constructor Create(const ABagRule: String);
   end;
 
   TBags = class(TObjectList<TBag>)
@@ -28,10 +28,6 @@ type
   end;
 
 { TBag }
-
-{ Rules:
-dull blue bags contain 2 dotted green bags, 1 dull brown bag, 3 striped tomato bags, 5 muted blue bags.
-posh green bags contain no other bags. }
 
 function TBag.Contains(const AColor: String): Integer;
 var
@@ -99,25 +95,25 @@ end;
 
 var
   Input: TStringList;
+  Bags: TBags;
+  I: Integer;
   Answer1: Integer = 0;
   Answer2: Integer;
-  I: Integer;
-  Bags: TBags;
 
 begin
   Input := TStringList.Create;
   Bags := TBags.Create;
   try
     Input.LoadFromFile('input.txt');
-    { Part I }
     for I := 0 to Input.Count - 1 do
       Bags.Add(TBag.Create(Input[I]));
     Bags.ResolveAllRules;
+  { Part I }
     for I := 0 to Bags.Count - 1 do
       if Bags[I].Contains('shiny gold') > 0 then
         Inc(Answer1);
     WriteLn('Part I: ', Answer1);
-    { Part II }
+  { Part II }
     Answer2 := Bags.GetBagWithColor('shiny gold').Content;
     WriteLn('Part II: ', Answer2);
   finally
