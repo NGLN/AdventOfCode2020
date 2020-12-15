@@ -7,24 +7,13 @@ uses
   System.Classes,
   System.Types;
 
-var
-  Input: TStringList;
-  I: Integer;
-  Action: Char;
-  Value: Integer;
-  Heading: Integer;
-  Ferry: TPoint = (X: 0; Y: 0);
-  WayPoint: TPoint = (X: 10; Y: 1);
-
 type
-  TPointHelper = record Helper for TPoint
+  TPointHelper = record helper for TPoint
     function ManhattenDistance: Integer;
     procedure Move(WindDirection: Char; Value: Integer);
     procedure Rotate(Angle: Integer);
     procedure MoveBy(const APoint: TPoint; Multiplier: Integer);
   end;
-
-{ TPointHelper }
 
 function TPointHelper.ManhattenDistance: Integer;
 begin
@@ -48,19 +37,25 @@ begin
 end;
 
 procedure TPointHelper.Rotate(Angle: Integer);
-var
-  P: TPoint;
 begin
-  P := Self;
   case Angle mod 360 of
     90, -270:
-      SetLocation(P.Y, -P.X);
+      SetLocation(Y, -X);
     180, -180:
-      SetLocation(-P.X, -P.Y);
+      SetLocation(-X, -Y);
     270, -90:
-      SetLocation(-P.Y, P.X);
+      SetLocation(-Y, X);
   end;
 end;
+
+var
+  Input: TStringList;
+  I: Integer;
+  Action: Char;
+  Value: Integer;
+  Heading: Integer;
+  Ferry: TPoint = (X: 0; Y: 0);
+  WayPoint: TPoint = (X: 10; Y: 1);
 
 function HeadingToAction: Char;
 begin
