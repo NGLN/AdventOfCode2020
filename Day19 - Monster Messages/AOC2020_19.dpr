@@ -24,8 +24,6 @@ type
     procedure SubstituteRule(ARule: TRule);
   end;
 
-{ TRule }
-
 function TRule.ContainsRule: Boolean;
 var
   C: Char;
@@ -56,8 +54,6 @@ begin
     Pattern := StuffString(Pattern, I, L, ARule.Pattern);
 end;
 
-{ TRules }
-
 procedure TRules.Resolve;
 var
   Done: Boolean;
@@ -83,8 +79,8 @@ var
   LoopNo: Integer;
   Rule: TRule;
 begin
-  for LoopNo := 1 to 3 do // A rule appears at most 3 times in a single rule
-    for Rule in Values do
+  for Rule in Values do
+    for LoopNo := 1 to 3 do // A rule appears at most 3 times in a single rule
       if Rule.ContainsRule(ARule) then
         Rule.SubstituteRule(ARule);
 end;
@@ -135,22 +131,19 @@ function ValidMessage2(const AMessage: String): Boolean;
 // Rule 0: n*42 m*31         ; n>m, m>0
 var
   Pattern: String;
-  RegEx: TRegEx;
   M: Integer;
 begin
   M := 1;
   repeat
 //  Pattern := '(Pattern31){M}$'
     Pattern := '(' + Rules[31].Pattern + '){' + IntToStr(M) + '}$';
-    RegEx := TRegEx.Create(Pattern, [roExplicitCapture]);
-    Result := RegEx.IsMatch(AMessage);
+    Result := TRegEx.IsMatch(AMessage, Pattern, [roExplicitCapture]);
     if Result then
     begin
 //    Pattern := '^(Pattern42){M+1,}(Pattern31){M}$'
       Pattern := '^(' + Rules[42].Pattern + '){' + IntToStr(M + 1) + ',}' +
         Pattern;
-      RegEx := TRegEx.Create(Pattern, [roExplicitCapture]);
-      if RegEx.IsMatch(AMessage) then
+      if TRegEx.IsMatch(AMessage, Pattern, [roExplicitCapture]) then
         Exit(True);
     end;
     Inc(M);
@@ -174,9 +167,7 @@ begin
     Input.LoadFromFile('input.txt');
     ParseInput;
     Rules.Resolve;
-  { Part I }
     WriteLn('Part I: ', ValidMessageCount(ValidMessage1));
-  { Part II }
     WriteLn('Part II: ', ValidMessageCount(ValidMessage2));
   finally
     Rules.Free;
