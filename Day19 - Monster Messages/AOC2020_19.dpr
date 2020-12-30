@@ -90,7 +90,7 @@ begin
 end;
 
 var
-  Messages: TStringList;
+  Input: TStringList;
   Rules: TRules;
 
 procedure ParseInput;
@@ -98,19 +98,22 @@ var
   I: Integer;
   Rule: TRule;
 begin
-  while Messages[0] <> '' do
+  while Input[0] <> '' do
   begin
-    I := Pos(':', Messages[0]);
+    I := Pos(':', Input[0]);
     Rule := TRule.Create;
-    Rule.Index := StrToInt(Copy(Messages[0], 1, I - 1));
-    Rule.Pattern := ' ' + Copy(Messages[0], I + 2, MaxInt) + ' ';
+    Rule.Index := StrToInt(Copy(Input[0], 1, I - 1));
+    Rule.Pattern := ' ' + Copy(Input[0], I + 2, MaxInt) + ' ';
     if Rule.Pattern[2] = '"' then
       Rule.Pattern := Rule.Pattern[3];
     Rules.Add(Rule.Index, Rule);
-    Messages.Delete(0);
+    Input.Delete(0);
   end;
-  Messages.Delete(0);
+  Input.Delete(0);
 end;
+
+type
+  TMessageValidator = function(const AMessage: String): Boolean;
 
 function ValidMessage1(const AMessage: String): Boolean;
 var
@@ -131,55 +134,53 @@ function ValidMessage2(const AMessage: String): Boolean;
 // Rule 0: n*42 m*42 m*31    ; n>0, m>0
 // Rule 0: n*42 m*31         ; n>m, m>0
 var
-  Input: String;
   Pattern: String;
   RegEx: TRegEx;
   M: Integer;
 begin
-  Input := AMessage;
   M := 1;
   repeat
-    // Pattern := '^(Pattern42){M+1,}(Pattern31){M}$'
+//  Pattern := '(Pattern31){M}$'
     Pattern := '(' + Rules[31].Pattern + '){' + IntToStr(M) + '}$';
     RegEx := TRegEx.Create(Pattern, [roExplicitCapture]);
-    Result := RegEx.IsMatch(Input);
+    Result := RegEx.IsMatch(AMessage);
     if Result then
     begin
+//    Pattern := '^(Pattern42){M+1,}(Pattern31){M}$'
       Pattern := '^(' + Rules[42].Pattern + '){' + IntToStr(M + 1) + ',}' +
         Pattern;
       RegEx := TRegEx.Create(Pattern, [roExplicitCapture]);
-      if RegEx.IsMatch(Input) then
+      if RegEx.IsMatch(AMessage) then
         Exit(True);
-      Inc(M);
     end;
+    Inc(M);
   until not Result;
 end;
 
+function ValidMessageCount(Validator: TMessageValidator): Integer;
 var
   I: Integer;
-  Answer1: Integer = 0;
-  Answer2: Integer = 0;
+begin
+  Result := 0;
+  for I := 0 to Input.Count - 1 do
+    if Validator(Input[I]) then
+      Inc(Result);
+end;
 
 begin
-  Messages := TStringList.Create;
+  Input := TStringList.Create;
   Rules := TRules.Create;
   try
-    Messages.LoadFromFile('input.txt');
+    Input.LoadFromFile('input.txt');
     ParseInput;
     Rules.Resolve;
   { Part I }
-    for I := 0 to Messages.Count - 1 do
-      if ValidMessage1(Messages[I]) then
-        Inc(Answer1);
-    WriteLn('Part I: ', Answer1);
+    WriteLn('Part I: ', ValidMessageCount(ValidMessage1));
   { Part II }
-    for I := 0 to Messages.Count - 1 do
-      if ValidMessage2(Messages[I]) then
-        Inc(Answer2);
-    WriteLn('Part II: ', Answer2);
+    WriteLn('Part II: ', ValidMessageCount(ValidMessage2));
   finally
     Rules.Free;
-    Messages.Free;
+    Input.Free;
   end;
   ReadLn;
 end.
