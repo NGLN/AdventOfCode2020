@@ -8,49 +8,50 @@ uses
   System.StrUtils,
   System.Generics.Collections;
 
+const
+  MaxLabel = 1000000;
+  Input = '253149867';
+//  Input = '389125467'; {AoC test input}
+//  3 8 9 1 2 5 4 6 7       Current = 3
+//  3       2 5 4 6 7       Destination = 2
+//  3 2       5 4 6 7
+//  3 2 8 9 1 5 4 6 7
+//    2 8 9 1 5 4 6 7 3     Current = 2
+//    2       5 4 6 7 3     Destination = 1 > 9 > 8 > 7
+//    2 5 4 6 7       3
+//    2 5 4 6 7 8 9 1 3
+//      5 4 6 7 8 9 1 3 2   Current = 5
+
 type
   TLabel = Integer;
 
-  TCups = class(TList<TLabel>)
+  TCups1 = class(TList<TLabel>)
     CurrentIndex: Integer;
-    function AsText: String;
     function LabelsAfter1: String;
-    procedure Move1;
-    procedure Move2;
-    procedure PrepareForPartII;
+    procedure Move;
     procedure ReadFromInput;
   end;
 
-{ TCups }
+  TCups2 = class(TObject)
+    Current: TLabel;
+    Nexts: array[1..MaxLabel] of TLabel;
+    procedure Move;
+    function MultiplyTwoCupsAfterOne: Int64;
+    procedure ReadFromInput;
+  end;
 
-function TCups.AsText: String;
+function TCups1.LabelsAfter1: String;
 var
   I: Integer;
 begin
   Result := '';
   for I := 0 to 8 do
-    Result := Result + Items[I].ToString;
-end;
-
-procedure TCups.PrepareForPartII;
-var
-  I: TLabel;
-begin
-  Capacity := 10000000 + 1000000;
-  for I := 10 to 1000000 do
-    Add(I);
-end;
-
-function TCups.LabelsAfter1: String;
-var
-  I: Integer;
-begin
-  Result := AsText;
+    Result := Result + IntToStr(Items[I]);
   I := Pos('1', Result);
   Result := Copy(Result, I + 1, 9) + Copy(Result, 1, I - 1);
 end;
 
-procedure TCups.Move1;
+procedure TCups1.Move;
 var
   Current: TLabel;
   Draws: array[0..2] of TLabel;
@@ -73,63 +74,7 @@ begin
   Add(ExtractAt(CurrentIndex));
 end;
 
-const
-  Input = '253149867'; {aoc input}
-//  Input = '123456789'; {aoc test input}
-//  Input = '428619375';  {my test input}
-{
-4 2 8 6 1 9 3 7 5         Current = 4
-4       1 9 3 7 5         Dest = 3
-4 1 9 3       7 5
-4 1 9 3 2 8 6 7 5
-  1 9 3 2 8 6 7 5 4       Current = 1
-  1       8 6 7 5 4       Dest = 8
-  1 8       6 7 5 4
-  1 8 9 3 2 6 7 5 4
-    8 9 3 2 6 7 5 4 1     Current = 8
-}
-
-procedure TCups.Move2;
-var
-  Current: TLabel;
-  Draws: array[0..2] of TLabel;
-  I: Integer;
-  Dest: TLabel;
-
-  function CalcDestination: TLabel;
-  var
-    J: Integer;
-    K: Integer;
-  begin
-    Result := Current - 1;
-    for J := 0 to 2 do
-    begin
-      for K := 0 to 2 do
-        if Result = Draws[K] then
-          Dec(Result);
-      if Result = 0 then
-        Result := 1000000;
-    end;
-  end;
-
-begin
-  Current := Items[CurrentIndex];
-  for I := 0 to 2 do
-    Draws[I] := Items[CurrentIndex + 1 + I];
-  Dest := CalcDestination;
-  I := CurrentIndex;
-  repeat
-    Inc(I);
-    Items[I] := Items[I + 3];
-  until Items[I + 3] = Dest;
-  Items[I + 1] := Draws[0];
-  Items[I + 2] := Draws[1];
-  Items[I + 3] := Draws[2];
-  Add(Current);
-  Inc(CurrentIndex);
-end;
-
-procedure TCups.ReadFromInput;
+procedure TCups1.ReadFromInput;
 var
   I: Integer;
 begin
@@ -137,27 +82,102 @@ begin
     Add(StrToInt(Input[I]));
 end;
 
+procedure TCups2.Move;
 var
-  Cups: TCups;
-  I: Integer;
+  Cup1: TLabel;
+  Cup2: TLabel;
+  Cup3: TLabel;
+  DestCup: TLabel;
+
+  function Destination: TLabel;
+  begin
+    Result := Current - 1;
+    while (Result = Cup1) or (Result = Cup2) or (Result = Cup3) or
+      (Result = 0) do
+    begin
+      Dec(Result);
+      if Result <= 0 then
+        Result := MaxLabel;
+    end;
+  end;
 
 begin
-  Cups := TCups.Create;
+  Cup1 := Nexts[Current];
+  Cup2 := Nexts[Cup1];
+  Cup3 := Nexts[Cup2];
+  DestCup := Destination;
+  Nexts[Current] := Nexts[Cup3];
+  Nexts[Cup3] := Nexts[DestCup];
+  Nexts[DestCup] := Cup1;
+  Current := Nexts[Current];
+end;
+
+function TCups2.MultiplyTwoCupsAfterOne: Int64;
+begin
+  Result := Nexts[1];
+  Result := Result * Nexts[Result];
+end;
+
+procedure TCups2.ReadFromInput;
+var
+  L: Integer;
+  I: Integer;
+  Cup: TLabel;
+  NextCup: TLabel;
+begin
+  L := Length(Input);
+  for I := 1 to MaxLabel do
+  begin
+    if I < L then
+    begin
+      Cup := StrToInt(Input[I]);
+      NextCup := StrToInt(Input[I + 1]);
+    end
+    else if I = L then
+    begin
+      Cup := StrToInt(Input[I]);
+      NextCup := L + 1;
+    end
+    else if I < MaxLabel then
+    begin
+      Cup := I;
+      NextCup := I + 1;
+    end
+    else // I = MaxLabel
+    begin
+      Cup := I;
+      NextCup := StrToInt(Input[1]);
+    end;
+    Nexts[Cup] := NextCup;
+  end;
+  Current := StrToInt(Input[1]);
+end;
+
+var
+  Cups1: TCups1;
+  I: Integer;
+  Cups2: TCups2;
+
+begin
+{ Part I }
+  Cups1 := TCups1.Create;
   try
-    Cups.ReadFromInput;
-  { Part I }
+    Cups1.ReadFromInput;
     for I := 1 to 100 do
-      Cups.Move1;
-    WriteLn('Part I: ', Cups.LabelsAfter1);
-  { Part II }
-    Cups.Clear;
-    Cups.ReadFromInput;
-    Cups.PrepareForPartII;
-    for I := 1 to 10000000 do
-      Cups.Move2;
-    WriteLn('Part II: ', 'This takes way too long!!!');
+      Cups1.Move;
+    WriteLn('Part I: ', Cups1.LabelsAfter1);
   finally
-    Cups.Free;
+    Cups1.Free;
+  end;
+{ Part II }
+  Cups2 := TCups2.Create;
+  try
+    Cups2.ReadFromInput;
+    for I := 1 to 10000000 do
+      Cups2.Move;
+    WriteLn('Part II: ', Cups2.MultiplyTwoCupsAfterOne);
+  finally
+    Cups2.Free;
   end;
   ReadLn;
 end.
